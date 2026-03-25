@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission: Stadtentwicklung - Jakarta & Nusantara</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0d1b2a;
+            --surface-color: rgba(27, 38, 59, 0.85);
+            --accent-color: #00e5ff;
+            --accent-hover: #00b8cc;
+            --text-color: #e0e1dd;
+            --success-color: #4caf50;
+            --error-color: #f44336;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            background-image: radial-gradient(circle at 50% 0%, #1b263b, #0d1b2a);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Container */
+        .glass-panel {
+            background: var(--surface-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            margin: 2rem auto;
+            animation: fadeIn 0.5s ease-out;
+            padding: 0 1rem;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-weight: 800;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            background: linear-gradient(90deg, #00e5ff, #80ffdb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4);
+        }
+
+        .btn:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Wimmelbild Phase */
+        .desk-container {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            min-height: 400px;
+            max-height: 550px;
+            /* Garantiert sichtbare Holzstruktur, unabhaengig von Firewalls, durch inline SVG-Rauschen und CSS-Gradienten */
+            background-color: #4a2810;
+            background-image:
+                repeating-linear-gradient(90deg, transparent 0, transparent 118px, rgba(0, 0, 0, 0.3) 119px, rgba(0, 0, 0, 0.5) 120px),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.005 0.3' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' fill='%234a2810'/%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.9);
+            cursor: crosshair;
+        }
+
+        .desk-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: block;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .svg-item {
+            position: absolute;
+            filter: drop-shadow(0 15px 15px rgba(0, 0, 0, 0.9));
+            transition: all 0.3s ease;
+            user-select: none;
+            z-index: 5;
+            width: 80px;
+            height: 80px;
+        }
+
+        .svg-item svg {
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            /* Make click pass to container div */
+        }
+
+        .real-item {
+            cursor: pointer;
+        }
+
+        .real-item:hover,
+        .real-item:active {
+            transform: scale(1.15) translateY(-5px) !important;
+            filter: drop-shadow(0 20px 20px rgba(0, 229, 255, 0.6));
+            z-index: 10;
+        }
+
+        .real-item.read {
+            filter: grayscale(0.8) drop-shadow(0 5px 5px rgba(0, 0, 0, 0.5));
+            opacity: 0.6;
+        }
+
+        .fake-item {
+            cursor: default;
+        }
+
+        /* Orientations and Placements */
+        #item-jakarta {
+            top: 20%;
+            left: 15%;
+            transform: rotate(-8deg);
+        }
+
+        #item-rotterdam {
+            top: 60%;
+            left: 35%;
+            transform: rotate(5deg);
+            width: 100px;
+            height: 100px;
+        }
+
+        #item-brasilia {
+            top: 35%;
+            left: 60%;
+            transform: rotate(-15deg);
+            width: 70px;
+            height: 90px;
+        }
+
+        #item-tokio {
+            top: 70%;
+            left: 75%;
+            transform: rotate(12deg);
+            width: 100px;
+            height: 100px;
+        }
+
+        #fake-1 {
+            top: 15%;
+            left: 75%;
+            transform: rotate(45deg);
+            width: 120px;
+            height: 120px;
+        }
+
+        /* Pen */
+        #fake-2 {
+            top: 70%;
+            left: 10%;
+            transform: rotate(-20deg);
+            width: 90px;
+            height: 90px;
+        }
+
+        /* Coffee */
+        #fake-3 {
+            top: 40%;
+            left: 30%;
+            transform: rotate(10deg);
+            width: 60px;
+            height: 110px;
+        }
+
+        /* Mobile */
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .glass-panel {
+                padding: 1.2rem;
+            }
+
+            .hidden-hotspot:hover {
+                font-size: 0.8rem;
+            }
+
+            /* Smaller hint text */
+            .puzzle-card {
+                padding: 1rem;
+            }
+
+            .lock-container {
+                gap: 10px;
+            }
+
+            .digit-box {
+                width: 50px;
+                height: 70px;
+                font-size: 2rem;
+            }
+
+            .digit-controls {
+                gap: 30px;
+            }
+        }
+
+        .progress-tracker {
+            text-align: center;
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: #1b263b;
+            border: 1px solid var(--accent-color);
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .info-tag {
+            display: inline-block;
+            background: rgba(0, 229, 255, 0.2);
+            color: var(--accent-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        /* Decision Tree Puzzle */
+        .decision-tree {
+            background: linear-gradient(135deg, #1e272e, rgba(27, 38, 59, 0.9));
+            border: 2px solid #00e5ff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
+        }
+
+        .tree-nodes {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tree-btn {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #747d8c;
+            padding: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #dfe4ea;
+            font-size: 0.95rem;
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        .tree-btn:hover {
+            border-color: #00e5ff;
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        .tree-btn.selected {
+            border-color: #ffda79;
+            background: rgba(255, 218, 121, 0.1);
+        }
+
+        .branch-content {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 4px solid #ffda79;
+            border-radius: 4px;
+        }
+
+        .sub-btn {
+            display: block;
+            width: 100%;
+            margin: 8px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: 1px dotted #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.2s;
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .sub-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #00e5ff;
+        }
+
+        .secret-doc {
+            background: #f1f2f6;
+            color: #2f3542;
+            padding: 2rem;
+            font-family: 'Courier New', monospace;
+            border-left: 5px solid #dcdde1;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transform: rotate(1deg);
+            margin-bottom: 2.5rem;
+        }
+
+        .redacted-select {
+            background: #2f3542;
+            color: #fff;
+            border: none;
+            padding: 2px 5px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Stamp Puzzle */
+        .proposal-card {
+            background: #fdfcdc;
+            color: #333;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            border-left: 6px solid #1d3557;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .proposal-card:hover {
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .stamp-mark {
+            position: absolute;
+            right: -20px;
+            top: 10px;
+            padding: 10px;
+            border: 4px solid;
+            color: transparent;
+            font-size: 1.5rem;
+            font-family: monospace;
+            font-weight: bold;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-10deg) scale(2);
+            opacity: 0;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+
+        .proposal-card.stamped .stamp-mark {
+            opacity: 0.8;
+            transform: rotate(-5deg) scale(1);
+            right: 20px;
+        }
+
+        .proposal-card.stamped.wrong .stamp-mark {
+            color: #e63946;
+            border-color: #e63946;
+        }
+
+        .proposal-card.stamped.correct {
+            border-left-color: #4caf50;
+        }
+
+        .proposal-card.stamped.correct .stamp-mark {
+            color: #4caf50;
+            border-color: #4caf50;
+        }
+
+        /* Tap and Drop Logic */
+        .sus-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .sus-card {
+            background: #2f3542;
+            color: #f1f2f6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            font-size: 0.9rem;
+        }
+
+        .sus-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .sus-card.active {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px var(--accent-color);
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .sus-card.assigned {
+            display: none;
+        }
+
+        .sus-zone {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            min-height: 120px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .sus-zone:hover {
+            background: rgba(0, 229, 255, 0.1);
+            border-color: var(--accent-color);
+        }
+
+        .sus-zone.filled {
+            border-style: solid;
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+            cursor: default;
+        }
+
+        .dropped-content {
+            margin-top: 15px;
+            font-weight: normal;
+            font-size: 0.9rem;
+            font-style: italic;
+            color: #fff;
+        }
+
+        /* Lock Phase */
+        .lock-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 2rem 0;
+        }
+
+        .digit-box {
+            width: 60px;
+            height: 80px;
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+        }
+
+        .digit-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .digit-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .digit-btn:hover {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Intro Screen -->
+    <div id="screen-intro" class="screen active">
+        <div class="glass-panel text-center">
+            <h1>Mission: Hauptstadt in der Krise</h1>
+            <p>Willkommen in der Planungsbehörde. Jakarta, eine der größten Städte der Welt, sinkt. Gleichzeitig steigen
+                die Meeresspiegel. Überschwemmungen, Wohnungsnot und soziale Ungleichheit nehmen drastisch zu.</p>
+            <p>Die Regierung plant die Verlagerung der Hauptstadt nach <strong>Nusantara</strong> auf der Insel Borneo.
+                Doch ist das die einzige oder beste Lösung? Was passiert mit den Millionen Menschen, die in Jakarta
+                bleiben?</p>
+            <p>Deine Aufgabe: Analysiere Lösungsansätze aus anderen Weltmetropolen, triff begründete Entscheidungen für
+                Jakartas Zukunft und bewerte die Nachhaltigkeit deiner Strategie.</p>
+            <button class="btn" onclick="showScreen('screen-wimmelbild')">Akte öffnen</button>
+        </div>
+    </div>
+
+    <!-- Phase 1: Wimmelbild -->
+    <div id="screen-wimmelbild" class="screen">
+        <div class="glass-panel">
+            <h2>Phase 1: Informationsbeschaffung</h2>
+            <p>Durchsuche den Schreibtisch nach vier wichtigen Dokumenten. Klicke auf die Objekte, um aus realen
+                Beispielen weltweit zu lernen.</p>
+
+            <div class="desk-container">
+                <div class="desk-overlay"></div>
+                <!-- Reale Anklickbare Dokumente (SVG Symbole) -->
+                <div id="item-jakarta" class="svg-item real-item" onclick="openModal('modal-jakarta', this)"
+                    title="Untersuchen">
+                    <svg viewBox="0 0 100 100">
+                        <path d="M5,85 L5,25 L35,25 L45,15 L95,15 L95,85 Z" fill="#d4a373" />
+                        <path d="M5,85 L25,35 L98,35 L88,85 Z" fill="#faedcd" /><text x="50" y="65"
+                            font-family="sans-serif" font-size="12" fill="#d4a373" font-weight="bold"
+                            text-anchor="middle" transform="rotate(-5 50 65)">AKTE JKT</text>
+                    </svg>
+                </div>
+                <div id="item-rotterdam" class="svg-item real-item" onclick="openModal('modal-rotterdam', this)"
+                    title="Untersuchen">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="10" y="20" width="80" height="60" fill="#fdfcdc" />
+                        <path d="M36,20 L36,80 M64,20 L64,80" stroke="#ccc" stroke-width="2" />
+                        <path d="M10,40 Q30,60 50,40 T90,60" stroke="#1d3557" stroke-width="4" fill="none" />
+                        <path d="M10,60 Q30,80 50,60 T90,80" stroke="#e63946" stroke-width="3" fill="none" />
+                        <circle cx="50" cy="40" r="5" fill="#e63946" />
+                    </svg>
+                </div>
+                <div id="item-brasilia" class="svg-item real-item" onclick="openModal('modal-brasilia', this)"
+                    title="Untersuchen">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="20" y="10" width="60" height="80" rx="3" fill="#1d3557" />
+                        <rect x="25" y="10" width="55" height="80" fill="#457b9d" />
+                        <rect x="20" y="10" width="5" height="80" fill="#0b172a" /><text x="50" y="55"
+                            font-family="sans-serif" font-size="8" fill="#f1faee" font-weight="bold"
+                            text-anchor="middle" transform="rotate(-90 50 55)">BRASILIA</text>
+                    </svg>
+                </div>
+                <div id="item-tokio" class="svg-item real-item" onclick="openModal('modal-tokio', this)"
+                    title="Untersuchen">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="20" y="10" width="60" height="80" fill="#e0fbfc" />
+                        <rect x="25" y="15" width="50" height="70" fill="#98c1d9" stroke="#fff" />
+                        <path d="M30,30 L70,30 M30,50 L70,50 M30,70 L50,70" stroke="#fff" stroke-width="3"
+                            fill="none" /><text x="50" y="25" font-family="monospace" font-size="6" fill="#fff"
+                            text-anchor="middle">MAOUDC</text>
+                    </svg>
+                </div>
+
+                <!-- Nicht anklickbare Deko/Falsche Fährten (SVG Symbole) -->
+                <div id="fake-1" class="svg-item fake-item" title="Stift">
+                    <svg viewBox="0 0 100 100">
+                        <polygon points="20,80 30,60 85,15 95,25 40,70" fill="#fca311" />
+                        <polygon points="20,80 30,60 25,55" fill="#e5e5e5" />
+                        <polygon points="85,15 95,25 90,30" fill="#14213d" />
+                        <polygon points="20,80 15,85 10,90 12,87 18,72" fill="#14213d" />
+                    </svg>
+                </div>
+                <div id="fake-2" class="svg-item fake-item" title="Kaffee">
+                    <svg viewBox="0 0 100 100">
+                        <circle cx="45" cy="50" r="35" fill="#e63946" />
+                        <circle cx="45" cy="50" r="28" fill="#1d3557" />
+                        <path d="M80,50 C80,30 100,30 90,50 C100,70 80,70 80,50" stroke="#e63946" stroke-width="8"
+                            fill="none" />
+                        <circle cx="45" cy="50" r="28" fill="#3a2a24" />
+                    </svg>
+                </div>
+                <div id="fake-3" class="svg-item fake-item" title="Smartphone">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="20" y="10" width="60" height="80" rx="8" fill="#000" />
+                        <rect x="25" y="15" width="50" height="65" fill="#3f37c9" />
+                        <circle cx="50" cy="85" r="3" fill="#333" />
+                        <rect x="35" y="40" width="30" height="10" rx="2" fill="#fff" opacity="0.5" />
+                    </svg>
+                </div>
+            </div>
+
+            <div class="progress-tracker">Gelesene Dokumente: <span id="doc-count">0</span> / 4</div>
+
+            <div style="text-align: center;">
+                <button id="btn-to-puzzles" class="btn" style="display: none;" onclick="showScreen('screen-puzzles')">Zu
+                    den Planungs-Entscheidungen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals for Wimmelbild -->
+    <div id="modal-jakarta" class="modal-overlay">
+        <div class="glass-panel modal-content">
+            <span class="close-btn" onclick="closeModal('modal-jakarta')">&times;</span>
+            <span class="info-tag">Ausgangslage</span>
+            <h2>Statusbericht: Jakarta</h2>
+            <p><strong>Problem:</strong> Jakarta sinkt an einigen Stellen um bis zu 25 cm pro Jahr, hauptsächlich durch
+                exzessive Grundwasserentnahme. Gleichzeitig gibt es immer stärkere Regenfälle und einen steigenden
+                Meeresspiegel.</p>
+            <p><strong>Soziale Lage:</strong> Millionen Menschen leben in sogenannten "Kampungs" (informellen
+                Siedlungen) direkt an den extrem verschmutzten Flüssen. Sie sind am stärksten von Überflutungen bedroht.
+            </p>
+        </div>
+    </div>
+
+    <div id="modal-rotterdam" class="modal-overlay">
+        <div class="glass-panel modal-content">
+            <span class="close-btn" onclick="closeModal('modal-rotterdam')">&times;</span>
+            <span class="info-tag">Fallstudie: Niederlande</span>
+            <h2>Rotterdam: Schwammstadt & Raum für den Fluss</h2>
+            <p><strong>Das Konzept:</strong> Anstatt nur höhere Deiche zu bauen (die eines Tages brechen könnten), macht
+                Rotterdam dem Wasser Platz. Die Stadt funktioniert wie ein Schwamm.</p>
+            <p><strong>Maßnahmen:</strong> Wasserplätze (Waterpleinen), die bei Trockenheit als Skateparks oder
+                Sportplätze dienen, füllen sich bei Starkregen mit Wasser und entlasten so die Kanalisation. Flüsse
+                bekommen breitere Uferzonen, um kontrolliert über die Ufer treten zu können.</p>
+            <p><strong>Relevanz für Jakarta:</strong> Kann eine integrierte, naturnahe Wasserplanung die Lösung für die
+                Flutprobleme sein, ohne massenhaft Menschen vertreiben zu müssen?</p>
+        </div>
+    </div>
+
+    <div id="modal-brasilia" class="modal-overlay">
+        <div class="glass-panel modal-content">
+            <span class="close-btn" onclick="closeModal('modal-brasilia')">&times;</span>
+            <span class="info-tag">Historische Akte: Brasilien</span>
+            <h2>Brasília: Die geplante Hauptstadt</h2>
+            <p><strong>Das Konzept:</strong> 1960 wurde Brasílias Bau abgeschlossen, um die alte, überlastete Hauptstadt
+                Rio de Janeiro zu entlasten und das Landesinnere zu entwickeln.</p>
+            <p><strong>Das Resultat:</strong> Die am Reißbrett entworfene Stadt war extrem autogerecht und teuer. Sie
+                wurde zu einer Enklave für Beamte und Reiche. Geringverdiener (die Bauarbeiter) wurden an den Rand in
+                weit entfernte Satellitenstädte gedrängt, was zu enormer sozialer Segregation und täglichen
+                Verkehrsstaus führte.</p>
+            <p><strong>Relevanz für Nusantara:</strong> Wie verhindert man, dass eine neue Hauptstadt zu einer leblosen
+                Geisterstadt für Eliten wird und die alten Probleme nur verschiebt?</p>
+        </div>
+    </div>
+
+    <div id="modal-tokio" class="modal-overlay">
+        <div class="glass-panel modal-content">
+            <span class="close-btn" onclick="closeModal('modal-tokio')">&times;</span>
+            <span class="info-tag">Infrastruktur-Blaupause: Japan</span>
+            <h2>Tokio: Der Untergrund-Tempel (MAOUDC)</h2>
+            <p><strong>Das Konzept:</strong> Tokio hat den größten unterirdischen Hochwasser-Ableitungskanal der Welt
+                gebaut (Metropolitan Area Outer Underground Discharge Channel). Ein gewaltiges System aus 50 Meter hohen
+                Betonsäulen und 6 km langen Tunneln, das Wassermassen absaugt.</p>
+            <p><strong>Das Resultat:</strong> Technisch hochwirksam, schützt es die Millionenmetropole perfekt vor
+                Taifunen. Allerdings lagen die Baukosten im Milliardenbereich und der Unterhalt ist extrem teuer.</p>
+            <p><strong>Relevanz für Jakarta:</strong> Ist ein solches massives Beton-Megaprojekt in einer rapide
+                absinkenden und finanziell schwächeren Stadt realistisch und sicher?</p>
+        </div>
+    </div>
+
+    <!-- Phase 2: Puzzles -->
+    <div id="screen-puzzles" class="screen">
+        <div class="glass-panel">
+            <h2>Phase 2: Die Planungswerkstatt</h2>
+            <p>Die Planungsphase beginnt. Wende dein Wissen aus den Akten (Rotterdam, Brasília, Tokio) an, um die
+                drängenden Fragen Jakartas zu klären. Jedes gelöste Konzept liefert dir eine Ziffer für den finalen
+                Code.</p>
+
+            <!-- Rätsel 1: Entscheidungsbaum -->
+            <div class="decision-tree" id="puzzle-1-container">
+                <h3
+                    style="color: #00e5ff; border-bottom: 1px solid #00e5ff; padding-bottom: 10px; margin-bottom: 10px;">
+                    Entscheidungsbaum: Masterplan Flutschutz</h3>
+                <p>Der Präsident fordert einen ersten drastischen Masterplan gegen das Drohszenario. Wähle deinen Ansatz
+                    – aber bedenke die Konsequenzen jedes Weges!</p>
+
+                <div id="tree-level-1" class="tree-nodes">
+                    <button class="tree-btn" onclick="takeBranch('tokio', this)">A) Megabauwerke: Betonieren wir extreme
+                        Flutungstunnel & 50m Mauern in die Bucht (Tokio-Modell).</button>
+                    <button class="tree-btn" onclick="takeBranch('brasilia', this)">B) Flucht nach vorn: Fokus &
+                        Finanzen komplett auf eine neue Hauptstadt im weit entfernten Dschungel setzen
+                        (Brasília-Modell).</button>
+                    <button class="tree-btn" onclick="takeBranch('rotterdam', this)">C) Naturbasiert: Die alte Stadt
+                        entsiegeln, Flüsse renaturieren und lokale Schwammparks anlegen (Rotterdam-Modell).</button>
+                </div>
+
+                <!-- Dynamic Branches -->
+                <div id="branch-tokio" class="branch-content" style="display: none;">
+                    <h4 style="color: #e63946; margin-bottom: 10px;">⚠️ KRITISCHER VORFALL: Bodenbruch!</h4>
+                    <p style="font-size: 0.95rem;">Die neuen, gigantischen Tunnel aus Beton bekommen tiefe Risse.
+                        Jakartas Problem ist nämlich spezieller als Tokios: Die extrem schwere Metropole sackt schneller
+                        ein, als man bauen kann!</p>
+                    <div style="margin-top: 15px;">
+                        <p style="font-weight: bold; margin-bottom: 5px;">Ursachenforschung: Erkenne den Grund des
+                            unaufhaltsamen Sinkens, um den Fehler der Betonmassen zu verstehen:</p>
+                        <button class="sub-btn" onclick="resolveBranch('tokio', false)">1. Globale Klimaerwärmung lässt
+                            das Meer einfach viel zu schnell steigen.</button>
+                        <button class="sub-btn" onclick="resolveBranch('tokio', true)">2. Unregulierte, ständige
+                            Grundwasser-Entnahme führt zum Einsturz des porösen Untergrunds.</button>
+                    </div>
+                    <div id="feedback-tokio" class="feedback"></div>
+                </div>
+
+                <div id="branch-brasilia" class="branch-content" style="display: none;">
+                    <h4 style="color: #e63946; margin-bottom: 10px;">⚠️ BUDGET-KRISE: Unbezahlbar!</h4>
+                    <p style="font-size: 0.95rem;">Die Prestige-Planstadt im Regenwald verschlingt sämtliche
+                        Staatsreserven. Für das alte Jakarta – wo Millionen Arme nun ohnmächtig der Flut überlassen sind
+                        – ist kein Geld mehr übrig!</p>
+                    <div style="margin-top: 15px;">
+                        <p style="font-weight: bold; margin-bottom: 5px;">Budget-Sanierung: Streiche ein teures
+                            Prestige-Objekt für Jakarta, um Geld für sozialen Schutz zu retten:</p>
+                        <button class="sub-btn" onclick="resolveBranch('brasilia', true)">1. Fokuswechsel: Bau
+                            künstlicher Luxus-Inseln in der Bucht (NCICD) sofort stoppen.</button>
+                        <button class="sub-btn" onclick="resolveBranch('brasilia', false)">2. Fokuswechsel: Den Ausbau
+                            von elementarer Abwasser-Klärung für Nord-Viertel stoppen.</button>
+                    </div>
+                    <div id="feedback-brasilia" class="feedback"></div>
+                </div>
+
+                <div id="branch-rotterdam" class="branch-content" style="display: none;">
+                    <h4 style="color: #4caf50; margin-bottom: 10px;">✅ FORTSCHRITT: Das Wasser weicht!</h4>
+                    <p style="font-size: 0.95rem;">Die dezentrale Schwammstadt lenkt Regenmassen kontrolliert ab,
+                        Bodensenkung wird durch Renaturierung verlangsamt. ABER: Für all die riesigen Sicker-Parks fehlt
+                        in der extrem verdichteten Stadt schlicht der Platz!</p>
+                    <div style="margin-top: 15px;">
+                        <p style="font-weight: bold; margin-bottom: 5px;">Raumnot lösen: Wie kann Platz für grüne
+                            Infrastruktur geschaffen werden, ohne Zehntausende wehrlose Slumbewohner radikal zu
+                            verdrängen?</p>
+                        <button class="sub-btn" onclick="resolveBranch('rotterdam', false)">1. Flächenhafter
+                            Zwangsabriss aller einkommensschwachen Siedlungen am zentralen Fluss.</button>
+                        <button class="sub-btn" onclick="resolveBranch('rotterdam', true)">2. Die Regierung &
+                            Administration zieht in eine ferne Entlastungs-Hauptstadt (Nusantara) um und gibt riesige
+                            Amts-Flächen im alten Jakarta als Sickerraum frei.</button>
+                    </div>
+                    <!-- Feedback-1 ID is used to validate Phase 2 Puzzle 1! -->
+                    <div id="feedback-1" class="feedback"></div>
+                </div>
+            </div>
+
+            <!-- Rätsel 2: Memorandum (Anfangs versteckt) -->
+            <div class="secret-doc" id="puzzle-2-container"
+                style="display: none; opacity: 0; transition: opacity 0.5s;">
+                <h3
+                    style="color: #c23616; border-bottom: 2px solid #c23616; display: inline-block; padding-bottom: 5px;">
+                    MEMORANDUM: NUSANTARA</h3>
+                <p style="margin-top: 1rem; line-height: 1.8;">
+                    <strong>Betreff: Best Case Szenario Borneo</strong><br><br>
+                    Um den Fehler von <select id="doc-stadt" class="redacted-select" onchange="checkPuzzle2()">
+                        <option value="">[STADT...]</option>
+                        <option value="rio">Rio de Janeiro</option>
+                        <option value="brasilia">Brasília</option>
+                        <option value="rotterdam">Rotterdam</option>
+                    </select> zu vermeiden, darf Nusantara nicht zu einer sterilen <select id="doc-art"
+                        class="redacted-select" onchange="checkPuzzle2()">
+                        <option value="">[ART...]</option>
+                        <option value="arbeiter">Arbeiterstadt</option>
+                        <option value="beamten">Beamtenstadt für Eliten</option>
+                        <option value="industrie">Industriemetropole</option>
+                    </select> werden.
+                    <br><br>
+                    Gleichzeitig darf das alte Jakarta nicht <select id="doc-aktion" class="redacted-select"
+                        onchange="checkPuzzle2()">
+                        <option value="">[AKTION...]</option>
+                        <option value="aufgegeben">aufgegeben werden</option>
+                        <option value="abgerissen">abgerissen werden</option>
+                        <option value="ignoriert">kopiert werden</option>
+                    </select>, da dort weiterhin Millionen Menschen leben und arbeiten werden. Die Rolle von Nusantara
+                    ist die administrative Entlastung.
+                </p>
+                <div id="feedback-2" class="feedback"></div>
+            </div>
+
+            <!-- Rätsel 3: Die Stempel-Akte (Anfangs versteckt) -->
+            <div id="puzzle-3-container" style="display: none; opacity: 0; transition: opacity 0.5s;">
+                <h3 style="color: var(--accent-color); margin-top: 2rem;">Das Kampung-Dilemma: Stempel die Entscheidung
+                </h3>
+                <p>Millionen der ärmsten Einwohner leben am Fluss. Hochwasserschutz ist nötig. Stempele den fachlich
+                    besten Antrag ab (Klicken), um soziales Desaster zu vermeiden!</p>
+                <div class="proposals" style="margin-top: 1rem;">
+                    <div class="proposal-card" onclick="stampProposal(this, 'wrong')">
+                        <h4 style="color: #333;">Antrag A</h4>
+                        <p style="color: #666; font-size: 0.9rem;">Abriss der Uferlinien für dicke Schutzwände. Die
+                            Bewohner werden gezwungen, sich am Festland neu anzusiedeln.</p>
+                        <div class="stamp-mark">ABGELEHNT</div>
+                    </div>
+                    <div class="proposal-card" onclick="stampProposal(this, 'correct')">
+                        <h4 style="color: #333;">Antrag B</h4>
+                        <p style="color: #666; font-size: 0.9rem;">Partizipatives "On-Site Upgrading" etablieren.
+                            Siedlungen werden dezentral gestärkt und lokale Wasserspeicher ausgebaut.</p>
+                        <div class="stamp-mark">GENEHMIGT</div>
+                    </div>
+                    <div class="proposal-card" onclick="stampProposal(this, 'wrong')">
+                        <h4 style="color: #333;">Antrag C</h4>
+                        <p style="color: #666; font-size: 0.9rem;">Man verlagert die gesamte Infrastruktur-Finanzierung
+                            nach Nusantara, das Kampung-Problem löst sich dann durch Abwanderung der Mittelschicht von
+                            selbst.</p>
+                        <div class="stamp-mark">ABGELEHNT</div>
+                    </div>
+                </div>
+                <div id="feedback-3" class="feedback"></div>
+            </div>
+
+            <div style="text-align: center;">
+                <button id="btn-to-sus" class="btn" style="display: none;"
+                    onclick="showScreen('screen-sustainability')">Zum Nachhaltigkeits-Check</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 3: Sustainability Check (Tap and Drop) -->
+    <div id="screen-sustainability" class="screen">
+        <div class="glass-panel">
+            <h2>Phase 3: Nachhaltiges Zuordnen</h2>
+            <p>Deine Strategie (<strong>Schwammstadt + Entlastungszentrum + Kampung-Aufwertung</strong>) ist die logisch
+                beste, aber auch sie hat Nachteile. Stadtplanung bedeutet immer, Zielkonflikte zu verwalten.</p>
+            <p><strong>Aufgabe:</strong> Tippe auf einen Zielkonflikt in der Liste und weise ihn dann durch Antippen der
+                richtigen Zieldimension zu!</p>
+
+            <div id="card-pile" style="margin: 1.5rem 0;">
+                <div class="sus-card" data-dim="eco" onclick="selectCard(this)"><strong>Konflikt A:</strong> Das
+                    Schwammstadt-Viertel fängt viel Flut naturnah ab, jedoch gefährdet die Rodung für Nusantara extrem
+                    seltene Regenwälder und deren Artenvielfalt auf Borneo.</div>
+                <div class="sus-card" data-dim="soc" onclick="selectCard(this)"><strong>Konflikt B:</strong> On-Site
+                    Upgrading schützt gewachsene Gemeinschaften vor massenhafter Zwangsräumung. Doch die Hauptstadt
+                    Nusantara könnte so luxuriös werden, dass sich Arme dort überhaupt nicht ansiedeln können.</div>
+                <div class="sus-card" data-dim="eco-nom" onclick="selectCard(this)"><strong>Konflikt C:</strong> Eine
+                    dezentrale Wasserführung ist preiswerter als 50m dicke Betonmauern durch die Innenstadt. Aber zwei
+                    Hauptstädte im Land parallel aufrechtzuerhalten, kostet den Staat hunderte Milliarden Euro, die
+                    woanders fehlen.</div>
+                <div class="sus-card" data-dim="pol" onclick="selectCard(this)"><strong>Konflikt D:</strong> Ein
+                    Planungsentscheid von oben herab (Top-Down) geht schnell und wirkt für Politiker kurzfristig
+                    attraktiv. Doch eine echte Beteiligung der Armen bei Quartier-Umbauten dauert oft viele Jahre und
+                    verzögert Fortschritte.</div>
+            </div>
+
+            <div class="sus-grid">
+                <div class="sus-zone" id="zone-eco" onclick="dropCard('eco')">
+                    <h4 style="color: #4caf50;">Ökologisch 🌱</h4>
+                    <div class="dropped-content"></div>
+                </div>
+                <div class="sus-zone" id="zone-soc" onclick="dropCard('soc')">
+                    <h4 style="color: #ff9800;">Sozial 🤝</h4>
+                    <div class="dropped-content"></div>
+                </div>
+                <div class="sus-zone" id="zone-eco-nom" onclick="dropCard('eco-nom')">
+                    <h4 style="color: #2196f3;">Ökonomisch 💰</h4>
+                    <div class="dropped-content"></div>
+                </div>
+                <div class="sus-zone" id="zone-pol" onclick="dropCard('pol')">
+                    <h4 style="color: #9c27b0;">Politisch/Planerisch 🏛️</h4>
+                    <div class="dropped-content"></div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="btn-to-lock" class="btn" style="display: none;"
+                    onclick="showScreen('screen-lock')">Entscheidungscode eingeben (7-4-2)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 4: Code Entry -->
+    <div id="screen-lock" class="screen">
+        <div class="glass-panel text-center">
+            <h2>Phase 4: Die Masterplan-Freigabe</h2>
+            <p>Gib den 3-stelligen Code ein, der sich aus deinen fachlich korrekten Entscheidungen (Rätsel 1, 2 und 3)
+                ergeben hat.</p>
+
+            <div class="lock-container">
+                <div class="digit-controls">
+                    <button class="digit-btn" onclick="changeDigit(1, 1)"><i class="fas fa-chevron-up"></i></button>
+                    <div id="digit-1" class="digit-box">0</div>
+                    <button class="digit-btn" onclick="changeDigit(1, -1)"><i class="fas fa-chevron-down"></i></button>
+                </div>
+                <div class="digit-controls">
+                    <button class="digit-btn" onclick="changeDigit(2, 1)"><i class="fas fa-chevron-up"></i></button>
+                    <div id="digit-2" class="digit-box">0</div>
+                    <button class="digit-btn" onclick="changeDigit(2, -1)"><i class="fas fa-chevron-down"></i></button>
+                </div>
+                <div class="digit-controls">
+                    <button class="digit-btn" onclick="changeDigit(3, 1)"><i class="fas fa-chevron-up"></i></button>
+                    <div id="digit-3" class="digit-box">0</div>
+                    <button class="digit-btn" onclick="changeDigit(3, -1)"><i class="fas fa-chevron-down"></i></button>
+                </div>
+            </div>
+
+            <button class="btn" onclick="checkCode()">Masterplan bestätigen</button>
+            <div id="lock-feedback" class="feedback" style="font-size: 1.2rem; margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- Success Screen -->
+    <div id="screen-success" class="screen">
+        <div class="glass-panel text-center" style="border-color: var(--success-color);">
+            <h1
+                style="background: var(--success-color); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Herzlichen Glückwunsch!</h1>
+            <p>Du hast einen realistischen, nachhaltigen und fachlich fundierten Entwicklungsplan für Jakarta und
+                Nusantara vorgelegt.</p>
+            <ul style="text-align: left; max-width: 500px; margin: 20px auto; line-height: 1.8;">
+                <li><i class="fas fa-check" style="color: var(--success-color);"></i> Schwammstadt statt purer Beton
+                </li>
+                <li><i class="fas fa-check" style="color: var(--success-color);"></i> Nusantara als Entlastung, nicht
+                    als Geisterstadt</li>
+                <li><i class="fas fa-check" style="color: var(--success-color);"></i> Soziale Aufwertung statt
+                    Vertreibung</li>
+                <li><i class="fas fa-check" style="color: var(--success-color);"></i> Bewusstsein für Zielkonflikte</li>
+            </ul>
+            <p><strong>Dein Escape-Room Einsatz war erfolgreich!</strong></p>
+        </div>
+    </div>
+
+    <script>
+        // Screen Navigation
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // Wimmelbild Logic
+        let readDocs = new Set();
+        function openModal(modalId, element) {
+            document.getElementById(modalId).style.display = 'flex';
+            if (!element.classList.contains('read')) {
+                element.classList.add('read');
+                readDocs.add(modalId);
+                document.getElementById('doc-count').innerText = readDocs.size;
+                if (readDocs.size === 4) {
+                    document.getElementById('btn-to-puzzles').style.display = 'inline-block';
+                }
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Puzzles Logic
+        function checkPuzzle1() {
+            const tokio = document.getElementById('chalk-tokio').value;
+            const rot = document.getElementById('chalk-rotterdam').value;
+            const um = document.getElementById('chalk-umsiedlung').value;
+            const fb = document.getElementById('feedback-1');
+
+            if (tokio && rot && um) {
+                if (tokio === 'teuer' && rot === 'realistisch' && um === 'sozial') {
+                    fb.innerHTML = "✅ Tafelbild korrekt! Tokios Tunnel sind für Jakartas sinkenden Boden zu riskant. Rotterdam bietet hier das bessere Vorbild.  <br><br>Ziffer gefunden: <strong style='font-size: 1.5rem;'>7</strong>";
+                    fb.className = "feedback correct";
+                    checkPuzzlesComplete();
+                } else {
+                    fb.innerHTML = "❌ Die Gleichungen gehen fachlich so noch nicht auf. Überprüfe die Lektionen aus den Weltstädten.";
+                    fb.className = "feedback wrong";
+                }
+            }
+        }
+
+        function checkPuzzle2() {
+            const stadt = document.getElementById('doc-stadt').value;
+            const art = document.getElementById('doc-art').value;
+            const aktion = document.getElementById('doc-aktion').value;
+            const fb = document.getElementById('feedback-2');
+
+            if (stadt && art && aktion) {
+                if (stadt === 'brasilia' && art === 'beamten' && aktion === 'aufgegeben') {
+                    fb.innerHTML = "✅ Memorandum entschlüsselt! Eine Geisterstadt voller pendelnder Elite löst das Problem nicht, wenn man Jakarta aufgibt. <br><br>Ziffer gefunden: <strong style='font-size: 1.5rem;'>4</strong>";
+                    fb.className = "feedback correct";
+                    checkPuzzlesComplete();
+                } else {
+                    fb.innerHTML = "❌ Der Satz ergibt historisch oder planerisch keinen Sinn. Lies die Akten zur Planstadt nochmals.";
+                    fb.className = "feedback wrong";
+                }
+            }
+        }
+
+        function selectLogic(btn, result) {
+            document.querySelectorAll('.logic-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            const fb = document.getElementById('feedback-3');
+            if (result === 'correct') {
+                fb.innerHTML = "✅ Logik verknüpft! Die Bewohner müssen mit einbezogen werden. Massive Vertreibung erzeugt enorme Armut. <br><br>Ziffer gefunden: <strong style='font-size: 1.5rem;'>2</strong>";
+                fb.className = "feedback correct";
+                checkPuzzlesComplete();
+            } else {
+                fb.innerHTML = "❌ Diese Maßnahme führt zu einem sozialen Desaster oder Armut. Überdenke den Ansatz On-Site.";
+                fb.className = "feedback wrong";
+            }
+        }
+
+        function checkPuzzlesComplete() {
+            let p1 = document.getElementById('feedback-1').classList.contains('correct');
+            let p2 = document.getElementById('feedback-2').classList.contains('correct');
+            let p3 = document.getElementById('feedback-3').classList.contains('correct');
+            if (p1 && p2 && p3) {
+                document.getElementById('btn-to-sus').style.display = 'inline-block';
+            }
+        }
+
+        // Sequential Puzzle Logic: Decision Tree
+        function takeBranch(branch, btnElement) {
+            document.querySelectorAll('.branch-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tree-btn').forEach(btn => btn.classList.remove('selected'));
+            btnElement.classList.add('selected');
+            document.getElementById(`branch-${branch}`).style.display = 'block';
+        }
+
+        function resolveBranch(branch, isCorrect) {
+            if (branch === 'tokio') {
+                const fb = document.getElementById('feedback-tokio');
+                if (isCorrect) {
+                    fb.innerHTML = "💡 <b>Ursache verstanden:</b> Schwerer Beton verlangsamt das Sinken nicht, er beschleunigt es sogar. Deine Grundstrategie (A) rettet Jakarta auf Dauer nicht! Entwickle stattdessen oben im Baum eine nachhaltigere Naturbasis-Lösung.";
+                    fb.className = "feedback info";
+                } else {
+                    fb.innerHTML = "❌ Falsch. Der Meeresspiegel steigt weltweit, aber Jakarta sinkt um ein Vielfaches drastischer – durch massive, lokale Ausbeutung des Bodens mittels unkontrollierter Ziehbrunnen.";
+                    fb.className = "feedback wrong";
+                }
+                fb.style.display = "block";
+                fb.style.borderLeft = "4px solid #ffda79";
+            }
+            if (branch === 'brasilia') {
+                const fb = document.getElementById('feedback-brasilia');
+                if (isCorrect) {
+                    fb.innerHTML = "💡 <b>Milliarden gerettet!</b> Einsicht: Die 'Flucht nach vorn' reicht niemals aus. Das alte Jakarta muss zwingend (!) weiterhin kostengünstig geschützt werden. Überdenke oben im Baum deine exklusive Basisstrategie (B) zugunsten von Synergien!";
+                    fb.className = "feedback info";
+                } else {
+                    fb.innerHTML = "❌ Eine hygienische Katastrophe bricht aus. Ohne Kläranlagen sterben Menschen, Flüsse werden zu hochtoxischen Giftschlämmen. Armut vervielfacht sich unkontrolliert.";
+                    fb.className = "feedback wrong";
+                }
+                fb.style.display = "block";
+                fb.style.borderLeft = "4px solid #ffda79";
+            }
+            if (branch === 'rotterdam') {
+                const fb = document.getElementById('feedback-1');
+                if (isCorrect) {
+                    fb.innerHTML = "🎯 <b>MASTERPLAN BESTÄTIGT!</b> Nusantara (die exotische Planstadt) dient als administrative Entlastung, um Platz für die nötige Schwammstadt (Infrastruktur) zu schaffen, aber Jakarta als Hauptzentrum bestehen zu lassen. Eine perfekte Synergie!<br><br>Ziffer 1 errechnet: <strong style='font-size: 1.5rem;'>7</strong> <br><br><em>Geheimcode übermittelt, nächster Fallschritt geöffnet.</em>";
+                    fb.className = "feedback correct";
+                    const nextPuz = document.getElementById('puzzle-2-container');
+                    nextPuz.style.display = 'block';
+                    setTimeout(() => nextPuz.style.opacity = 1, 50);
+                    checkPuzzlesComplete();
+                } else {
+                    fb.innerHTML = "❌ Ein blutiges soziales Desaster! Gewaltige Proteste und Zwangsräumungen führen zu enormer Radikalisierung bei der ärmsten Stadtbevölkerung.";
+                    fb.className = "feedback wrong";
+                }
+                fb.style.display = "block";
+            }
+        }
+
+        function checkPuzzle2() {
+            const stadt = document.getElementById('doc-stadt').value;
+            const art = document.getElementById('doc-art').value;
+            const aktion = document.getElementById('doc-aktion').value;
+            const fb = document.getElementById('feedback-2');
+            const nextPuz = document.getElementById('puzzle-3-container');
+
+            if (stadt && art && aktion) {
+                if (stadt === 'brasilia' && art === 'beamten' && aktion === 'aufgegeben') {
+                    fb.innerHTML = "✅ Memorandum entschlüsselt! Jakarta kann nicht ignoriert werden, Brasilia zeigt warum Planstädte oft segregieren. <br><br>Ziffer 2: <strong style='font-size: 1.5rem;'>4</strong> (Geheimcode entsperrt Stempelakte)";
+                    fb.className = "feedback correct";
+                    nextPuz.style.display = 'block';
+                    setTimeout(() => nextPuz.style.opacity = 1, 50);
+                    checkPuzzlesComplete();
+                } else {
+                    fb.innerHTML = "❌ Der Satz ergibt planerisch keinen Sinn. Lies die historische Akte zu Südamerika.";
+                    fb.className = "feedback wrong";
+                }
+            }
+        }
+
+        function stampProposal(element, result) {
+            // Already stamped logic
+            if (element.classList.contains('stamped')) return;
+
+            element.classList.add('stamped');
+            element.classList.add(result);
+
+            const fb = document.getElementById('feedback-3');
+
+            if (result === 'correct') {
+                fb.innerHTML = "✅ Antrag GENEHMIGT! Partizipation schützt Existenzen und das soziale Gefüge. <br><br>Letzte Ziffer: <strong style='font-size: 1.5rem;'>2</strong>";
+                fb.className = "feedback correct";
+                checkPuzzlesComplete();
+            } else {
+                fb.innerHTML = "❌ Du hast einen katastrophalen Antrag bewertet! Lade die Akte neu (Seite aktualisieren), falls du feststeckst.";
+                fb.className = "feedback wrong";
+            }
+        }
+
+        function checkPuzzlesComplete() {
+            let p1 = document.getElementById('feedback-1').classList.contains('correct');
+            let p2 = document.getElementById('feedback-2').classList.contains('correct');
+            let p3 = document.getElementById('feedback-3').classList.contains('correct');
+            if (p1 && p2 && p3) {
+                document.getElementById('btn-to-sus').style.display = 'inline-block';
+            }
+        }
+
+        // Tap and Drop Logic (Sustainability)
+        let selectedCard = null;
+        let correctlyPlaced = 0;
+
+        function selectCard(card) {
+            document.querySelectorAll('.sus-card').forEach(c => c.classList.remove('active'));
+            selectedCard = card;
+            card.classList.add('active');
+        }
+
+        function dropCard(targetDim) {
+            if (!selectedCard) {
+                alert("Bitte wähle zuerst einen Zielkonflikt (Liste oben) durch Antippen aus!");
+                return;
+            }
+
+            const cardDim = selectedCard.getAttribute('data-dim');
+            const zone = document.getElementById(`zone-${targetDim}`);
+            const contentSlot = zone.querySelector('.dropped-content');
+
+            if (cardDim === targetDim) {
+                // Correct match
+                contentSlot.innerHTML = selectedCard.innerHTML;
+                selectedCard.classList.remove('active');
+                selectedCard.classList.add('assigned'); // remove from list
+                zone.classList.add('filled');
+
+                selectedCard = null;
+                correctlyPlaced++;
+
+                if (correctlyPlaced === 4) {
+                    document.getElementById('btn-to-lock').style.display = 'inline-block';
+                }
+            } else {
+                alert("❌ Falsche Zuweisung! Passt dieser Konflikt wirklich zu dieser Nachhaltigkeits-Dimension?");
+            }
+        }
+
+        // Lock Logic
+        let digits = [0, 0, 0];
+        const correctCode = [7, 4, 2];
+
+        function changeDigit(index, amount) {
+            let val = digits[index - 1] + amount;
+            if (val > 9) val = 0;
+            if (val < 0) val = 9;
+            digits[index - 1] = val;
+            document.getElementById(`digit-${index}`).innerText = val;
+        }
+
+        function checkCode() {
+            const feedback = document.getElementById('lock-feedback');
+            if (digits[0] === correctCode[0] && digits[1] === correctCode[1] && digits[2] === correctCode[2]) {
+                showScreen('screen-success');
+            } else {
+                feedback.innerHTML = "❌ Zugriff verweigert. Code inkorrekt. Hast du die richtigen Ziffern aus Phase 2 beachtet?";
+                feedback.className = "feedback wrong";
+                feedback.style.display = 'block';
+                setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+            }
+        }
+    </script>
+</body>
+
+</html>
